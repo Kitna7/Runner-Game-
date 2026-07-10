@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, EventTouch, tween, Vec3 } from 'cc';
+import { _decorator, Component, Node, EventTouch, tween, Vec3, screen } from 'cc';
 import { GameManager } from './GameManager';
 const { ccclass } = _decorator;
 
@@ -28,5 +28,12 @@ export class StartHand extends Component {
         GameManager.started = true;
         GameManager.paused = false;
         this.node.active = false;
+
+        // This tap is the first real user gesture in the whole game —
+        // the one guaranteed spot a browser will actually grant a
+        // fullscreen request, so it doubles as the fullscreen trigger.
+        if (!screen.isFullScreen) {
+            screen.requestFullScreen().catch(() => { /* not supported/blocked — fine, game still runs windowed */ });
+        }
     }
 }
