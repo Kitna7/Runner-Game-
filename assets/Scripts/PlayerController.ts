@@ -1,6 +1,12 @@
-import { _decorator, Component, Node, Vec3, Vec2, EventTouch, tween, Collider2D, Contact2DType, IPhysics2DContact, Animation, Sprite, SpriteFrame, Color, UIOpacity, UITransform, Size, RigidBody2D, AudioSource, AudioClip } from 'cc';
+import { _decorator, Component, Node, Vec3, Vec2, EventTouch, tween, Collider2D, Contact2DType, IPhysics2DContact, Animation, Sprite, SpriteFrame, Color, UIOpacity, UITransform, Size, RigidBody2D, AudioSource, AudioClip, view } from 'cc';
 import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
+
+// The -700 enemy despawn check below was tuned by eye at the 720-wide
+// design resolution — same issue as ObstacleController.despawnX and the
+// LevelSequence spawnX* properties. Wider screens reveal more design-space
+// width, so it needs to move further out to stay past the actual left edge.
+const DESIGN_HALF_WIDTH = 360;
 
 @ccclass('PlayerController')
 export class PlayerController extends Component {
@@ -215,7 +221,8 @@ export class PlayerController extends Component {
                 this.enemy.setPosition(pos.x - this.enemySpeed * dt, pos.y, 0);
             }
 
-            if (this.enemy.position.x < -700) {
+            const enemyDespawnX = -700 - (view.getVisibleSize().width / 2 - DESIGN_HALF_WIDTH);
+            if (this.enemy.position.x < enemyDespawnX) {
                 // A spawner hands the enemy back out later — just go
                 // dormant instead of looping back to its old start spot.
                 this.enemy.active = false;

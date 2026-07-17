@@ -1,8 +1,18 @@
-import { _decorator, Component, Node, warn, AudioSource, AudioClip, tween, Tween, Vec3, Sprite, SpriteFrame, UIOpacity } from 'cc';
+import { _decorator, Component, Node, warn, AudioSource, AudioClip, tween, Tween, Vec3, Sprite, SpriteFrame, UIOpacity, view } from 'cc';
 import { GameManager } from './GameManager';
 import { ObstacleController } from './ObstacleController';
 import { Collectible } from './Collectible';
 const { ccclass, property } = _decorator;
+
+// The spawnX* properties below were tuned by eye at the 720-wide design
+// resolution. Screens wider than that (desktop, landscape ad slots) reveal
+// more design-space width than 720 (see ResizeHandler's FIXED_HEIGHT
+// switch), so a fixed spawnXObstacle=750 stops being "just off the right
+// edge" and starts being visibly on-screen — obstacles/coins pop into
+// existence instead of scrolling in. edgeAdjust() keeps the same margin
+// past the *actual* edge on any width, while leaving behavior at exactly
+// 720 untouched.
+const DESIGN_HALF_WIDTH = 360;
 
 type SeqItem =
     | { type: 'money'; count: number; pyramid: boolean }
@@ -169,6 +179,14 @@ export class LevelSequence extends Component {
     private paypalCursor: number = 0;
     private finishLineSpawned: boolean = false;
 
+    // Keeps a design-space X that's meant to sit a fixed margin past the
+    // right/left edge (positive/negative sign) pinned to the *actual*
+    // current edge instead of the fixed 720-wide one.
+    private edgeAdjust(designX: number): number {
+        const extra = view.getVisibleSize().width / 2 - DESIGN_HALF_WIDTH;
+        return designX + Math.sign(designX) * extra;
+    }
+
     onLoad() {
         if (!this.coneTemplate) warn('[LevelSequence] Cone Template is not set — cone will never appear.');
         if (!this.enemyTemplate) warn('[LevelSequence] Enemy Template is not set — enemy will never appear.');
@@ -205,7 +223,15 @@ export class LevelSequence extends Component {
             this.distanceUntilNext = this.itemGapX + this.nextObstacleBuffer();
         } else {
             const groupWidth = this.spawnMoney(item.count, item.pyramid);
-            this.distanceUntilNext = this.itemGapX + groupWidth;
+            // Only extend the gap here if an obstacle is coming up next —
+            // nextObstacleBuffer() would also add moneyAfterObstacleBufferX
+            // for a money-then-money transition, which is meant for
+            // obstacle-then-money (see its own comment), not this case.
+            const next = SEQUENCE[this.index];
+            const extraBuffer = next && (next.type === 'cone' || next.type === 'enemy')
+                ? this.obstacleBufferX
+                : (!next ? this.finishLineDelayX : 0);
+            this.distanceUntilNext = this.itemGapX + groupWidth + extraBuffer;
         }
     }
 
@@ -214,9 +240,10 @@ export class LevelSequence extends Component {
 
         if (!this.finishLineSpawned) {
             this.finishLineSpawned = true;
-            this.finishLine.setPosition(this.spawnXFinish, this.finishLine.position.y, 0);
+            const x = this.edgeAdjust(this.spawnXFinish);
+            this.finishLine.setPosition(x, this.finishLine.position.y, 0);
             this.finishLine.active = true;
-            console.log('[LevelSequence] finish line spawned at x=', this.spawnXFinish, 'active=', this.finishLine.active);
+            console.log('[LevelSequence] finish line spawned at x=', x, 'active=', this.finishLine.active);
         }
 
         const pos = this.finishLine.position;
@@ -310,7 +337,14 @@ export class LevelSequence extends Component {
     private nextObstacleBuffer(): number {
         const next = SEQUENCE[this.index];
         if (next && (next.type === 'cone' || next.type === 'enemy')) {
-            return this.obstacleBufferX;
+            // obstacleBufferX alone is a fixed world-distance gap — on a
+            // wide screen the visible viewport can be wider than that gap,
+            // so the next obstacle enters from the right while the current
+            // one hasn't scrolled off the left yet and both are on screen
+            // at once with no time to jump either. Adding the current
+            // visible width guarantees the previous one has fully cleared
+            // the screen before the next one appears, on any screen size.
+            return view.getVisibleSize().width + this.obstacleBufferX;
         }
         if (next && next.type === 'money') {
             return this.moneyAfterObstacleBufferX;
@@ -323,18 +357,19 @@ export class LevelSequence extends Component {
 
     private spawnCone() {
         if (!this.coneTemplate) return;
+        const x = this.edgeAdjust(this.spawnXObstacle);
         const ctrl = this.coneTemplate.getComponent(ObstacleController);
         if (ctrl) {
-            ctrl.spawnAt(this.spawnXObstacle);
+            ctrl.spawnAt(x);
         } else {
-            this.coneTemplate.setPosition(this.spawnXObstacle, this.coneTemplate.position.y, 0);
+            this.coneTemplate.setPosition(x, this.coneTemplate.position.y, 0);
             this.coneTemplate.active = true;
         }
     }
 
     private spawnEnemy() {
         if (!this.enemyTemplate) return;
-        this.enemyTemplate.setPosition(this.spawnXObstacle, this.enemyTemplate.position.y, 0);
+        this.enemyTemplate.setPosition(this.edgeAdjust(this.spawnXObstacle), this.enemyTemplate.position.y, 0);
         this.enemyTemplate.active = true;
     }
 
@@ -364,7 +399,7 @@ export class LevelSequence extends Component {
             // Staircase up to the middle coin, then back down — e.g. for 5
             // coins: levels 0,1,2,1,0.
             const level = pyramid ? Math.min(i, count - 1 - i) : 0;
-            const x = this.spawnXMoney + i * spacingX;
+            const x = this.edgeAdjust(this.spawnXMoney) + i * spacingX;
             const y = baseY + level * this.coinStepHeight;
             collectible.spawnAt(x, y);
         }

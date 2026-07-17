@@ -1,8 +1,14 @@
-import { _decorator, Component, Node, Label, tween, Tween, Vec3, AudioSource, AudioClip } from 'cc';
+import { _decorator, Component, Node, Label, tween, Tween, Vec3, AudioSource, AudioClip, view } from 'cc';
 import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
 
 const PRAISE_MESSAGES = ['Perfect!', 'Great!', 'Fantastic!', 'Awesome!'];
+
+// See the same note in LevelSequence.ts — -700 was tuned by eye at the
+// 720-wide design resolution, so it needs to move further out on wider
+// screens to stay past the actual left edge.
+const DESIGN_HALF_WIDTH = 360;
+const BASE_DESPAWN_X = -700;
 
 @ccclass('Collectible')
 export class Collectible extends Component {
@@ -33,7 +39,8 @@ export class Collectible extends Component {
         const newX = pos.x - this.speed * deltaTime;
         this.node.setPosition(newX, pos.y, 0);
 
-        if (newX < -700) {
+        const despawnX = BASE_DESPAWN_X - (view.getVisibleSize().width / 2 - DESIGN_HALF_WIDTH);
+        if (newX < despawnX) {
             // Uncollected and off-screen — free it up so a pool/spawner can
             // hand it out again instead of it drifting forever unseen.
             this.node.active = false;

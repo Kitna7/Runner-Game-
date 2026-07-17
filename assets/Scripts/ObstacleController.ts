@@ -1,6 +1,12 @@
-import { _decorator, Component, Node, Vec2, Collider2D, RigidBody2D, Sprite, SpriteFrame } from 'cc';
+import { _decorator, Component, Node, Vec2, Collider2D, RigidBody2D, Sprite, SpriteFrame, view } from 'cc';
 import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
+
+// despawnX was tuned by eye at the 720-wide design resolution. See the same
+// note in LevelSequence.ts — wider screens reveal more design-space width,
+// so this keeps despawnX's margin past the *actual* left edge instead of
+// the fixed 720-wide one.
+const DESIGN_HALF_WIDTH = 360;
 
 @ccclass('ObstacleController')
 export class ObstacleController extends Component {
@@ -59,7 +65,8 @@ export class ObstacleController extends Component {
             this.node.setPosition(pos.x - this.speed * deltaTime, pos.y, 0);
         }
 
-        if (this.node.position.x < this.despawnX) {
+        const despawnX = this.despawnX - (view.getVisibleSize().width / 2 - DESIGN_HALF_WIDTH);
+        if (this.node.position.x < despawnX) {
             // A spawner hands this node back out later — just go dormant
             // instead of looping in place.
             this.node.active = false;
