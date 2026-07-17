@@ -11449,7 +11449,7 @@
     "jumpHand": {
       "__id__": 313
     },
-    "triggerX": 250,
+    "triggerX": 310,
     "_id": "a6/eIxawxDRpMdhEiMnxBU"
   },
   {
@@ -13895,7 +13895,7 @@
       }
     ],
     "paypalChance": 0.2,
-    "spawnXObstacle": 420,
+    "spawnXObstacle": 400,
     "spawnXCone": 260,
     "spawnXMoney": 380,
     "spawnXFinish": 450,
