@@ -202,6 +202,17 @@ export class LevelSequence extends Component {
             return;
         }
 
+        // Don't let the very first enemy walk on screen until she's
+        // actually collected enough coins — it should arrive fresh right
+        // after she's ready for it, not while she's still mid-way through
+        // the opening coins (which on a wide screen could otherwise still
+        // be uncollected by the time it would normally spawn).
+        const next = SEQUENCE[this.index];
+        if (next && next.type === 'enemy' && !GameManager.jumpHintShown
+            && GameManager.moneyCollected < GameManager.moneyToCollectBeforeJumpHint) {
+            return;
+        }
+
         this.distanceUntilNext -= this.worldSpeed * dt;
         if (this.distanceUntilNext > 0) return;
 
