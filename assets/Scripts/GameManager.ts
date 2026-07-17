@@ -3,6 +3,10 @@ export class GameManager {
     static gameOver: boolean = false;
     static paused: boolean = false;
     static jumpHintShown: boolean = false;
+    // True while the enemy has reached the jump-tutorial trigger point but
+    // is waiting on her to collect enough coins first — PlayerController
+    // checks this to hold it in place instead of letting it walk on.
+    static enemyHeld: boolean = false;
     static money: number = 0;
     static moneyCollected: number = 0;
     static moneyToCollectBeforeJumpHint: number = 2;

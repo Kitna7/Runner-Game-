@@ -210,11 +210,16 @@ export class PlayerController extends Component {
         // ticking every frame) instead of its own component, since a
         // separate script on that node kept ending up stuck in place.
         if (this.enemy && this.enemy.active && GameManager.started && !GameManager.paused) {
-            // A Kinematic RigidBody2D has to be moved via velocity — Box2D
-            // re-asserts the body's own transform over any direct
-            // node.setPosition() each physics step, which is exactly why
-            // it kept snapping back in place.
-            if (this.enemyRigidBody) {
+            // Reached the jump-tutorial trigger before she's collected
+            // enough coins — hold it exactly where it is (don't advance,
+            // but don't teleport it anywhere either) until she catches up.
+            if (GameManager.enemyHeld) {
+                if (this.enemyRigidBody) this.enemyRigidBody.linearVelocity = new Vec2(0, 0);
+            } else if (this.enemyRigidBody) {
+                // A Kinematic RigidBody2D has to be moved via velocity — Box2D
+                // re-asserts the body's own transform over any direct
+                // node.setPosition() each physics step, which is exactly why
+                // it kept snapping back in place.
                 this.enemyRigidBody.linearVelocity = new Vec2(-this.enemySpeed, 0);
             } else {
                 const pos = this.enemy.position;

@@ -15,19 +15,26 @@ export class JumpTutorialTrigger extends Component {
 
     update() {
         if (!GameManager.started || GameManager.jumpHintShown) return;
-        if (!this.node.active || this.node.position.x > this.triggerX) return;
+        if (!this.node.active || this.node.position.x > this.triggerX) {
+            GameManager.enemyHeld = false;
+            return;
+        }
 
         // She needs to have picked up the opening coins before the enemy
         // is allowed to stop her. Level spacing used to be relied on to
         // keep the coins arriving well ahead of the enemy reaching
         // triggerX, but that's not guaranteed on every screen width — so
-        // if she hasn't collected enough yet, hold the enemy right here
-        // instead of letting it coast straight through her untouched.
+        // if she hasn't collected enough yet, tell PlayerController to
+        // hold it exactly where it already is instead of coasting straight
+        // through her untouched. (Just stopping it here rather than
+        // teleporting it back to triggerX every frame — it may have moved
+        // a hair past triggerX in the same frame it crossed the line.)
         if (GameManager.moneyCollected < GameManager.moneyToCollectBeforeJumpHint) {
-            this.node.setPosition(this.triggerX, this.node.position.y, 0);
+            GameManager.enemyHeld = true;
             return;
         }
 
+        GameManager.enemyHeld = false;
         GameManager.jumpHintShown = true;
         GameManager.paused = true;
 
