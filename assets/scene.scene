@@ -13895,9 +13895,9 @@
       }
     ],
     "paypalChance": 0.2,
-    "spawnXObstacle": 560,
+    "spawnXObstacle": 420,
     "spawnXCone": 260,
-    "spawnXMoney": 460,
+    "spawnXMoney": 380,
     "spawnXFinish": 450,
     "itemGapX": 280,
     "obstacleBufferX": 260,
