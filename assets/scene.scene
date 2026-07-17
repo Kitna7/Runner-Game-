@@ -1612,7 +1612,7 @@
     "enemy": {
       "__id__": 301
     },
-    "enemySpeed": 260,
+    "enemySpeed": 22,
     "enemyWalkFrames": [
       {
         "__uuid__": "bcc7158f-0110-42d3-8919-65f24601055f@f9941",
@@ -11449,7 +11449,7 @@
     "jumpHand": {
       "__id__": 313
     },
-    "triggerX": 150,
+    "triggerX": 250,
     "_id": "a6/eIxawxDRpMdhEiMnxBU"
   },
   {
